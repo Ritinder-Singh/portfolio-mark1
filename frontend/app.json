@@ -1,0 +1,37 @@
+{
+  "expo": {
+    "name": "portfolio-mark1",
+    "slug": "portfolio-mark1",
+    "version": "1.0.0",
+    "scheme": "portfolio",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#0f172a"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.portfolio.mark1"
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0f172a"
+      },
+      "edgeToEdgeEnabled": true,
+      "predictiveBackGestureEnabled": false,
+      "package": "com.portfolio.mark1"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png",
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-router"
+    ]
+  }
+}
