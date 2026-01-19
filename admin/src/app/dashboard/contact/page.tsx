@@ -286,9 +286,12 @@ export default function ContactPage() {
                   <p className="whitespace-pre-wrap">{selectedMessage.message}</p>
                 </div>
                 <div className="pt-4">
-                  <Button asChild>
-                    <a href={`mailto:${selectedMessage.email}`}>Reply via Email</a>
-                  </Button>
+                  <a
+                    href={`mailto:${selectedMessage.email}`}
+                    className="inline-flex items-center justify-center whitespace-nowrap rounded-md text-sm font-medium transition-colors bg-primary text-primary-foreground shadow hover:bg-primary/90 h-9 px-4 py-2"
+                  >
+                    Reply via Email
+                  </a>
                 </div>
               </div>
             ) : (
