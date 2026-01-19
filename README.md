@@ -1,156 +1,391 @@
-# Portfolio Website
+# Portfolio App
 
-A modern, responsive portfolio website built with React Native and Expo, featuring a unified codebase for Web, iOS, and Android platforms.
+A full-stack portfolio application with a React Native/Expo frontend, FastAPI backend, and Next.js admin panel.
 
-## Preview
-
-| Desktop | Tablet | Mobile |
-|---------|--------|--------|
-| Full-width layout | Responsive medium layout | Mobile-optimized |
 ## Tech Stack
 
-### Frontend
-- **React Native** with **Expo** - Cross-platform mobile and web development
-- **Expo Router** - File-based routing for navigation
-- **NativeWind** (Tailwind CSS) - Utility-first styling
-- **TypeScript** - Type-safe development
-- **React Native Reanimated** - Smooth animations
-
-### Supported Platforms
-- Web (Desktop & Mobile browsers)
-- iOS (iPhone & iPad)
-- Android (Phones & Tablets)
+| Component | Technology |
+|-----------|------------|
+| **Frontend** | React Native + Expo (Web, iOS, Android) |
+| **Backend** | FastAPI + PostgreSQL |
+| **Admin Panel** | Next.js 14 |
+| **Styling** | NativeWind (Tailwind CSS) |
+| **Database** | PostgreSQL |
+| **Deployment** | Docker / Northflank |
 
 ## Project Structure
 
 ```
 portfolio-mark1/
-├── frontend/                 # React Native Expo app
-│   ├── app/                 # Expo Router pages
-│   │   ├── _layout.tsx      # Root layout
-│   │   ├── index.tsx        # Home page
-│   │   └── projects/
-│   │       ├── index.tsx    # All Projects page
-│   │       └── [id].tsx     # Project Detail page
-│   ├── src/
-│   │   ├── components/      # Reusable UI components
-│   │   ├── constants/       # App constants and data
-│   │   ├── hooks/           # Custom React hooks
-│   │   ├── types/           # TypeScript type definitions
-│   │   ├── utils/           # Utility functions
-│   │   └── assets/          # Images, fonts, etc.
-│   ├── tailwind.config.js   # Tailwind/NativeWind config
-│   └── package.json
-├── backend/                  # Backend API (TBD)
+├── frontend/          # Expo app (Web + Mobile)
+├── backend/           # FastAPI REST API
+├── admin/             # Next.js admin panel
+├── docker-compose.yml # Docker orchestration
+├── nginx.conf         # Reverse proxy config
 └── README.md
 ```
 
-## Getting Started
+---
+
+## Quick Start (Development)
 
 ### Prerequisites
-- Node.js 18+
-- npm or yarn
-- Expo CLI (`npm install -g expo-cli`)
-- For iOS: macOS with Xcode
-- For Android: Android Studio with SDK
+- Node.js 20+
+- Python 3.12+
+- PostgreSQL 16+
+- Docker (optional)
 
-### Installation
-
+### 1. Start Database
 ```bash
-# Clone the repository
-git clone https://github.com/Ritinder-Singh/portfolio-mark1.git
-cd portfolio-mark1
+cd backend
+docker-compose up -d  # Starts PostgreSQL
+```
 
-# Install frontend dependencies
+### 2. Start Backend
+```bash
+cd backend
+python -m venv .venv
+source .venv/bin/activate  # Windows: .venv\Scripts\activate
+pip install -r requirements.txt
+alembic upgrade head
+python scripts/seed.py  # Seed sample data
+uvicorn app.main:app --reload
+```
+Backend runs at: http://localhost:8000
+
+### 3. Start Admin Panel
+```bash
+cd admin
+npm install
+npm run dev
+```
+Admin panel runs at: http://localhost:3000
+
+### 4. Start Frontend
+```bash
 cd frontend
 npm install
+npx expo start --web
 ```
+Frontend runs at: http://localhost:8081
 
-### Running the App
+---
+
+## Deployment
+
+### Option 1: Docker Compose (Self-hosted)
 
 ```bash
-# Start the development server
-npm start
+# Copy environment file
+cp .env.example .env
+# Edit .env with your production values
 
-# Run on specific platforms
-npm run web       # Open in web browser
-npm run android   # Open in Android emulator/device
-npm run ios       # Open in iOS simulator (macOS only)
+# Build and start
+docker-compose up --build -d
+
+# View logs
+docker-compose logs -f
 ```
 
-## Features
+**URLs after deployment:**
+- Frontend: http://localhost/
+- Admin: http://localhost/admin
+- API: http://localhost/api/v1
 
-- **Responsive Design** - Adapts seamlessly across desktop, tablet, and mobile
-- **Single Page Application** - Smooth scrolling navigation
-- **Animated Hero Section** - Dynamic typing animation effect
-- **Technical Skills Showcase** - Categorized skills display
-- **Project Portfolio** - Featured projects with descriptions and tech stacks
-- **Contact Form** - Easy way to get in touch
-- **Cross-Platform** - One codebase, multiple platforms
+---
 
-## Sections
+### Option 2: Northflank Deployment
 
-1. **Header** - Navigation with logo and CTA buttons
-2. **Hero** - Introduction with animated text
-3. **Technical Arsenal** - Skills organized by category
-4. **Featured Projects** - Showcase of work with images and details
-5. **Contact** - Contact form and social links
-6. **Footer** - Copyright and credits
+#### Step 1: Create Northflank Project
+1. Go to [Northflank](https://northflank.com) and create a new project
+2. Connect your GitHub repository
 
-## Color Palette
+#### Step 2: Create PostgreSQL Addon
+1. In your project, go to **Addons** → **Create Addon**
+2. Select **PostgreSQL**
+3. Choose your plan and create
+4. Note the connection string from the addon details
 
-| Color | Hex | Usage |
-|-------|-----|-------|
-| Background | `#0f172a` | Main dark background |
-| Secondary BG | `#1e293b` | Cards and sections |
-| Primary (Teal) | `#14b8a6` | Accent color, CTAs |
-| Text Primary | `#f8fafc` | Main text |
-| Text Secondary | `#94a3b8` | Muted text |
+#### Step 3: Create Services
 
-## Pages
+**A. Backend Service:**
+1. **Services** → **Create Service** → **Build & Deploy**
+2. Settings:
+   - Name: `backend`
+   - Build context: `/backend`
+   - Dockerfile: `Dockerfile`
+   - Port: `8000`
+3. Environment variables (see below)
+4. Deploy
 
-| Route | Description |
-|-------|-------------|
-| `/` | Home page with hero, skills, featured projects, and contact |
-| `/projects` | All projects page with technology filtering |
-| `/projects/[id]` | Individual project detail page |
+**B. Admin Panel Service:**
+1. **Services** → **Create Service** → **Build & Deploy**
+2. Settings:
+   - Name: `admin`
+   - Build context: `/admin`
+   - Dockerfile: `Dockerfile`
+   - Port: `3000`
+3. Build arguments:
+   - `NEXT_PUBLIC_API_URL`: `https://your-backend-url/api/v1`
+   - `NEXT_PUBLIC_BASE_PATH`: `/admin` (if using path routing)
+4. Deploy
 
-## Customization
+**C. Frontend Service:**
+1. **Services** → **Create Service** → **Build & Deploy**
+2. Settings:
+   - Name: `frontend`
+   - Build context: `/frontend`
+   - Dockerfile: `Dockerfile`
+   - Port: `80`
+3. Build arguments:
+   - `EXPO_PUBLIC_API_URL`: `https://your-backend-url/api/v1`
+4. Deploy
 
-### Update Your Information
-Edit `frontend/src/constants/data.ts` to customize:
-- Logo text and site name
-- Navigation items
-- Skills and categories
-- Projects with descriptions, images, and links
-- Contact information
+#### Step 4: Configure Networking
+- Add custom domains or use Northflank-provided URLs
+- Set up SSL certificates (automatic with Northflank)
 
-All customizable fields are marked with `// TODO` comments.
+---
 
-## Future Enhancements (TODOs)
+## Environment Variables
 
-### Rich Project Detail Pages
-The project detail page (`app/projects/[id].tsx`) is set up for expanded content. To add richer project pages, extend the `Project` type in `src/types/index.ts`:
+### Backend (.env)
+```env
+# Database (from Northflank PostgreSQL addon)
+DATABASE_URL=postgresql://user:password@host:5432/database
 
-```typescript
-interface Project {
-  // Existing fields...
+# Security
+SECRET_KEY=generate-a-secure-64-char-random-string
 
-  // Add these for rich detail pages:
-  challenges?: string;        // Challenges faced during development
-  approach?: string;          // Your solution approach
-  features?: string[];        // List of key features
-  screenshots?: string[];     // Additional images for gallery
-  results?: string;           // Impact/metrics achieved
-  relatedProjects?: string[]; // IDs of related projects
+# CORS (comma-separated list of allowed origins)
+CORS_ORIGINS=["https://your-frontend-domain.com","https://your-admin-domain.com"]
+
+# App settings
+APP_NAME=Portfolio API
+API_V1_PREFIX=/api/v1
+```
+
+### Admin Panel (Build Args)
+```env
+NEXT_PUBLIC_API_URL=https://your-backend-domain.com/api/v1
+NEXT_PUBLIC_BASE_PATH=  # Set to /admin if using path-based routing
+```
+
+### Frontend (Build Args)
+```env
+EXPO_PUBLIC_API_URL=https://your-backend-domain.com/api/v1
+```
+
+### Generate Secret Key
+```bash
+python -c "import secrets; print(secrets.token_urlsafe(64))"
+```
+
+---
+
+## Building Mobile Apps
+
+### Prerequisites
+- Expo account (free): https://expo.dev
+- EAS CLI: `npm install -g eas-cli`
+- For iOS: Apple Developer account ($99/year)
+- For Android: Google Play Console account ($25 one-time)
+
+### Setup EAS Build
+```bash
+cd frontend
+eas login
+eas build:configure
+```
+
+### Build Android APK
+```bash
+# Development APK (for testing)
+eas build --platform android --profile preview
+
+# Production AAB (for Play Store)
+eas build --platform android --profile production
+```
+
+### Build iOS App
+```bash
+# Development build (for TestFlight)
+eas build --platform ios --profile preview
+
+# Production build (for App Store)
+eas build --platform ios --profile production
+```
+
+### EAS Build Configuration
+Create/update `frontend/eas.json`:
+```json
+{
+  "cli": {
+    "version": ">= 5.0.0"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal"
+    },
+    "preview": {
+      "distribution": "internal",
+      "android": {
+        "buildType": "apk"
+      },
+      "ios": {
+        "simulator": false
+      }
+    },
+    "production": {
+      "android": {
+        "buildType": "app-bundle"
+      }
+    }
+  },
+  "submit": {
+    "production": {}
+  }
 }
 ```
 
-### Backend Integration
-- Contact form submission endpoint
-- Content Management System (CMS) for projects
-- Analytics tracking
-- CV/Resume download handling
+### Update App Configuration
+Edit `frontend/app.json` before building:
+```json
+{
+  "expo": {
+    "name": "Your Portfolio",
+    "slug": "your-portfolio",
+    "version": "1.0.0",
+    "ios": {
+      "bundleIdentifier": "com.yourname.portfolio",
+      "buildNumber": "1"
+    },
+    "android": {
+      "package": "com.yourname.portfolio",
+      "versionCode": 1
+    },
+    "extra": {
+      "eas": {
+        "projectId": "your-eas-project-id"
+      }
+    }
+  }
+}
+```
+
+---
+
+## Pre-Deployment Checklist
+
+### Code & Configuration
+- [ ] Update `frontend/app.json` with your app name, bundle ID, and version
+- [ ] Update `frontend/src/constants/index.ts` with your personal info
+- [ ] Replace placeholder images in `frontend/assets/`
+- [ ] Update `backend/app/core/config.py` if needed
+- [ ] Generate a secure `SECRET_KEY` for production
+- [ ] Set correct `CORS_ORIGINS` for your domains
+
+### Database
+- [ ] Create production PostgreSQL database
+- [ ] Run migrations: `alembic upgrade head`
+- [ ] Create admin user for the admin panel
+- [ ] Seed initial data or add via admin panel
+
+### Security
+- [ ] Use HTTPS for all production URLs
+- [ ] Set strong database password
+- [ ] Review CORS settings (don't use `*` in production)
+- [ ] Set secure cookie settings if using sessions
+
+### Mobile Apps
+- [ ] Update app icons (1024x1024 for stores)
+- [ ] Update splash screen
+- [ ] Set correct bundle identifiers
+- [ ] Configure EAS project ID
+- [ ] Test on real devices before submitting
+
+### Testing
+- [ ] Test API endpoints with production database
+- [ ] Test frontend on multiple browsers
+- [ ] Test admin panel login and CRUD operations
+- [ ] Test mobile app on Android device/emulator
+- [ ] Test mobile app on iOS device/simulator
+- [ ] Verify images load correctly
+- [ ] Test contact form submission
+
+### Deployment
+- [ ] Set all environment variables
+- [ ] Configure custom domains
+- [ ] Set up SSL certificates
+- [ ] Configure health checks
+- [ ] Set up monitoring/logging
+- [ ] Create backup strategy for database
+
+---
+
+## API Endpoints
+
+### Public
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| GET | `/api/v1/projects` | List published projects |
+| GET | `/api/v1/projects/{slug}` | Get project by slug |
+| GET | `/api/v1/skills/categories` | List published skill categories |
+| POST | `/api/v1/contact` | Submit contact form |
+| GET | `/health` | Health check |
+
+### Admin (Requires Auth)
+| Method | Endpoint | Description |
+|--------|----------|-------------|
+| POST | `/api/v1/auth/login` | Login |
+| GET | `/api/v1/auth/me` | Get current user |
+| GET | `/api/v1/projects/admin/all` | List all projects |
+| POST | `/api/v1/projects` | Create project |
+| PATCH | `/api/v1/projects/{id}` | Update project |
+| DELETE | `/api/v1/projects/{id}` | Delete project |
+| GET | `/api/v1/skills/admin/categories` | List all categories |
+| POST | `/api/v1/skills/categories` | Create category |
+| PATCH | `/api/v1/skills/categories/{id}` | Update category |
+| DELETE | `/api/v1/skills/categories/{id}` | Delete category |
+| POST | `/api/v1/skills` | Create skill |
+| PATCH | `/api/v1/skills/{id}` | Update skill |
+| DELETE | `/api/v1/skills/{id}` | Delete skill |
+
+---
+
+## Admin Panel Features
+
+- **Dashboard**: Overview of projects, skills, and contact submissions
+- **Projects**: Create, edit, delete, publish/unpublish, feature projects
+- **Skills**: Manage skill categories and individual skills with activate/deactivate
+- **Contact**: View and manage contact form submissions
+- **Live Preview**: See how projects look on different devices
+
+---
+
+## Troubleshooting
+
+### Backend won't start
+- Check PostgreSQL is running: `docker-compose ps`
+- Verify DATABASE_URL is correct
+- Run migrations: `alembic upgrade head`
+
+### Frontend can't reach API
+- Check CORS_ORIGINS includes frontend URL
+- Verify API_URL in frontend config
+- Check backend is running and accessible
+
+### Mobile build fails
+- Run `eas build:configure` to set up
+- Check `app.json` has valid bundle identifiers
+- Verify EAS CLI is logged in: `eas whoami`
+
+### Admin panel 404 on routes
+- If using basePath, ensure NEXT_PUBLIC_BASE_PATH is set
+- Check nginx config routes correctly
+
+---
 
 ## License
 
@@ -158,4 +393,4 @@ MIT License - feel free to use this template for your own portfolio!
 
 ---
 
-Built with React Native + Expo + Expo Router
+Built with Expo + FastAPI + Next.js

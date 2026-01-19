@@ -1,55 +1,67 @@
 # Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
 
-# Environment files
+# ===========================================
+# CRITICAL - Secrets & Credentials
+# ===========================================
+
+# Environment files (contain database passwords, API keys, secrets)
 *.env
 .env*
-.env*.local
+!.env.example
+!.env.*.example
 
-# dependencies
+# Private keys and certificates
+*.pem
+*.key
+*.crt
+*.cert
+*.p8
+*.p12
+*.jks
+*.keystore
+*.mobileprovision
+
+# Service account files
+*-service-account.json
+google-services.json
+GoogleService-Info.plist
+credentials.json
+serviceAccountKey.json
+
+# ===========================================
+# Dependencies
+# ===========================================
 node_modules/
+.pnpm-store/
 
-# Expo
+# ===========================================
+# Expo / React Native
+# ===========================================
 .expo/
 dist/
 web-build/
 expo-env.d.ts
 
-# Native
+# Native build folders
+frontend/ios/
+frontend/android/
 .kotlin/
 *.orig.*
-*.jks
-*.p8
-*.p12
-*.key
-*.mobileprovision
 
-# Metro
+# Metro bundler
 .metro-health-check*
 
-# debug
-npm-debug.*
-yarn-debug.*
-yarn-error.*
-
-# macOS
-.DS_Store
-*.pem
-
-# typescript
+# ===========================================
+# Build outputs
+# ===========================================
+build/
+out/
+.next/
 *.tsbuildinfo
 
-# generated native folders - frontend
-frontend/ios
-frontend/android
-
-# IDE
-.idea/
-.vscode/
-*.swp
-*.swo
-
-# Backend Python
-backend/.env
+# ===========================================
+# Python / Backend
+# ===========================================
 __pycache__/
 *.pyc
 *.pyo
@@ -63,3 +75,46 @@ env/
 .pytest_cache/
 .coverage
 htmlcov/
+*.db
+*.sqlite3
+
+# ===========================================
+# Debug & Logs
+# ===========================================
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+*.log
+logs/
+
+# ===========================================
+# IDE & Editor
+# ===========================================
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# ===========================================
+# OS files
+# ===========================================
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# ===========================================
+# Docker
+# ===========================================
+# Don't ignore docker-compose.yml or Dockerfiles
+# But ignore local overrides
+docker-compose.override.yml
+docker-compose.local.yml
+
+# ===========================================
+# Misc
+# ===========================================
+*.bak
+*.tmp
+*.temp
+.cache/
