@@ -48,8 +48,18 @@ frontend/android
 *.swp
 *.swo
 
-# Backend (for future use)
-backend/node_modules/
+# Backend Python
 backend/.env
 __pycache__/
 *.pyc
+*.pyo
+*.pyd
+.Python
+venv/
+.venv/
+env/
+.egg-info/
+*.egg
+.pytest_cache/
+.coverage
+htmlcov/

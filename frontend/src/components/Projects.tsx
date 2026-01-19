@@ -1,7 +1,6 @@
 import React from "react";
-import { View, Text, Pressable, Image, Platform, Linking } from "react-native";
-import { useResponsive } from "@/hooks";
-import { PROJECTS } from "@/constants";
+import { View, Text, Pressable, Image, Platform, Linking, ActivityIndicator } from "react-native";
+import { useResponsive, useProjects } from "@/hooks";
 
 interface ProjectsProps {
   onProjectPress?: (projectId: string) => void;
@@ -10,6 +9,7 @@ interface ProjectsProps {
 
 export function Projects({ onProjectPress, onViewAllPress }: ProjectsProps) {
   const { isMobile, isTablet, isDesktop } = useResponsive();
+  const { projects, isLoading } = useProjects();
 
   const getGridCols = () => {
     if (isDesktop) return "flex-row flex-wrap";
@@ -62,10 +62,16 @@ export function Projects({ onProjectPress, onViewAllPress }: ProjectsProps) {
           )}
         </View>
 
+        {/* Loading State */}
+        {isLoading && projects.length === 0 && (
+          <View className="py-8 items-center">
+            <ActivityIndicator size="large" color="#3b82f6" />
+          </View>
+        )}
+
         {/* Projects Grid */}
         <View className={`${getGridCols()} gap-4 md:gap-6`}>
-          {/* TODO: Update projects in constants/data.ts */}
-          {PROJECTS.map((project) => (
+          {projects.map((project) => (
             <Pressable
               key={project.id}
               onPress={() => onProjectPress?.(project.id)}
@@ -82,12 +88,10 @@ export function Projects({ onProjectPress, onViewAllPress }: ProjectsProps) {
 
               {/* Project Content */}
               <View className="p-4 md:p-5">
-                {/* TODO: Update project title */}
                 <Text className="text-text-primary font-semibold text-lg mb-2">
                   {project.title}
                 </Text>
 
-                {/* TODO: Update project description */}
                 <Text
                   className="text-text-secondary text-sm mb-4 leading-relaxed"
                   numberOfLines={3}
@@ -97,7 +101,6 @@ export function Projects({ onProjectPress, onViewAllPress }: ProjectsProps) {
 
                 {/* Tech Tags */}
                 <View className="flex flex-row flex-wrap gap-2 mb-4">
-                  {/* TODO: Update project technologies */}
                   {project.technologies.map((tech, index) => (
                     <View
                       key={`${project.id}-tech-${index}`}

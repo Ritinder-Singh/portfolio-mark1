@@ -7,11 +7,12 @@ import {
   ScrollView,
   Platform,
   Linking,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter, useLocalSearchParams } from "expo-router";
-import { useResponsive } from "@/hooks";
-import { PROJECTS, SITE_CONFIG } from "@/constants";
+import { useResponsive, useProject } from "@/hooks";
+import { SITE_CONFIG } from "@/constants";
 
 // TODO: Future enhancements for rich project detail pages:
 // - Add "challenges" field: string describing the challenges faced
@@ -25,9 +26,7 @@ export default function ProjectDetailScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const { isMobile, isTablet, isDesktop } = useResponsive();
-
-  // Find the project by ID
-  const project = PROJECTS.find((p) => p.id === id);
+  const { project, isLoading, error } = useProject(id || "");
 
   const handleLinkPress = (url?: string) => {
     if (!url) return;
@@ -38,8 +37,17 @@ export default function ProjectDetailScreen() {
     }
   };
 
+  // Loading state
+  if (isLoading) {
+    return (
+      <SafeAreaView className="flex-1 bg-background items-center justify-center" edges={["top"]}>
+        <ActivityIndicator size="large" color="#3b82f6" />
+      </SafeAreaView>
+    );
+  }
+
   // 404 state
-  if (!project) {
+  if (!project || error) {
     return (
       <SafeAreaView className="flex-1 bg-background items-center justify-center" edges={["top"]}>
         <Text className="text-text-primary text-2xl font-bold mb-4">

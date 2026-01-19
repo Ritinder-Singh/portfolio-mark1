@@ -7,33 +7,35 @@ import {
   ScrollView,
   Platform,
   Linking,
+  ActivityIndicator,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import { useResponsive } from "@/hooks";
-import { PROJECTS, SITE_CONFIG } from "@/constants";
+import { useResponsive, useProjects } from "@/hooks";
+import { SITE_CONFIG } from "@/constants";
 
 export default function AllProjectsScreen() {
   const router = useRouter();
   const { isMobile, isTablet, isDesktop } = useResponsive();
+  const { projects, isLoading } = useProjects();
   const [selectedFilter, setSelectedFilter] = useState<string | null>(null);
 
   // Extract unique technologies from all projects
   const allTechnologies = useMemo(() => {
     const techSet = new Set<string>();
-    PROJECTS.forEach((project) => {
+    projects.forEach((project) => {
       project.technologies.forEach((tech) => techSet.add(tech));
     });
     return Array.from(techSet).sort();
-  }, []);
+  }, [projects]);
 
   // Filter projects based on selected technology
   const filteredProjects = useMemo(() => {
-    if (!selectedFilter) return PROJECTS;
-    return PROJECTS.filter((project) =>
+    if (!selectedFilter) return projects;
+    return projects.filter((project) =>
       project.technologies.includes(selectedFilter)
     );
-  }, [selectedFilter]);
+  }, [selectedFilter, projects]);
 
   const getGridCols = () => {
     if (isDesktop) return "flex-row flex-wrap";
@@ -157,6 +159,13 @@ export default function AllProjectsScreen() {
             {filteredProjects.length !== 1 ? "s" : ""}
             {selectedFilter && ` using ${selectedFilter}`}
           </Text>
+
+          {/* Loading State */}
+          {isLoading && projects.length === 0 && (
+            <View className="py-12 items-center">
+              <ActivityIndicator size="large" color="#3b82f6" />
+            </View>
+          )}
 
           {/* Projects Grid */}
           <View className={`${getGridCols()} gap-4 md:gap-6`}>

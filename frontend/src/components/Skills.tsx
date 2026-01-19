@@ -1,7 +1,6 @@
 import React from "react";
-import { View, Text } from "react-native";
-import { useResponsive } from "@/hooks";
-import { SKILL_CATEGORIES } from "@/constants";
+import { View, Text, ActivityIndicator } from "react-native";
+import { useResponsive, useSkills } from "@/hooks";
 
 // Icon components for skill categories
 function CodeIcon() {
@@ -50,6 +49,7 @@ function getCategoryIcon(iconName: string) {
 
 export function Skills() {
   const { isMobile, isTablet, isDesktop } = useResponsive();
+  const { categories, isLoading } = useSkills();
 
   const getGridCols = () => {
     if (isDesktop) return "flex-row flex-wrap";
@@ -81,10 +81,16 @@ export function Skills() {
           </Text>
         </View>
 
+        {/* Loading State */}
+        {isLoading && categories.length === 0 && (
+          <View className="py-8 items-center">
+            <ActivityIndicator size="large" color="#3b82f6" />
+          </View>
+        )}
+
         {/* Skills Grid */}
         <View className={`${getGridCols()} gap-4`}>
-          {/* TODO: Update skills in constants/data.ts */}
-          {SKILL_CATEGORIES.map((category) => (
+          {categories.map((category) => (
             <View
               key={category.id}
               className={`${getCardWidth()} bg-background-secondary rounded-xl p-5 md:p-6 border border-background-tertiary/30`}
@@ -101,7 +107,6 @@ export function Skills() {
 
               {/* Skills Tags */}
               <View className="flex flex-row flex-wrap gap-2">
-                {/* TODO: Update individual skills */}
                 {category.skills.map((skill, index) => (
                   <View
                     key={`${category.id}-${index}`}

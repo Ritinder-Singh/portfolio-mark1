@@ -7,7 +7,6 @@ A modern, responsive portfolio website built with React Native and Expo, featuri
 | Desktop | Tablet | Mobile |
 |---------|--------|--------|
 | Full-width layout | Responsive medium layout | Mobile-optimized |
-
 ## Tech Stack
 
 ### Frontend
