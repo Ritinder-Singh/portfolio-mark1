@@ -39,10 +39,15 @@ export function Hero({ onNavigate }: HeroProps) {
     return () => clearTimeout(timeout);
   }, [displayText, isDeleting, currentWordIndex]);
 
+  // On mobile, we want the hero to fill the screen (minus header ~64px)
+  // This prevents the next section from peeking at the bottom
+  const heroHeightClass = isMobile
+    ? "min-h-[calc(100vh-64px)]"
+    : "min-h-[85vh]";
+
   return (
     <View
-      id="hero"
-      className="bg-background min-h-[80vh] md:min-h-[85vh] flex justify-center"
+      className={`bg-background ${heroHeightClass} flex justify-center`}
     >
       <View className="w-full max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-12 md:py-20">
         <View
@@ -94,7 +99,7 @@ export function Hero({ onNavigate }: HeroProps) {
                   {displayText}
                 </Text>
                 <Text
-                  className={`text-primary font-bold animate-pulse ${
+                  className={`text-primary font-bold ${
                     isMobile ? "text-lg" : "text-xl"
                   }`}
                 >

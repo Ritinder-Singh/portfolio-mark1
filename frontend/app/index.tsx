@@ -1,12 +1,34 @@
 import { useRef, useCallback } from "react";
-import { ScrollView, View, Platform, findNodeHandle } from "react-native";
+import { ScrollView, View, LayoutChangeEvent } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Header, Hero, Skills, Projects, Contact, Footer } from "@/components";
+
+// Type for storing measured section positions
+type SectionPositions = {
+  [key: string]: number;
+};
 
 export default function HomeScreen() {
   const router = useRouter();
   const scrollViewRef = useRef<ScrollView>(null);
-  const sectionRefs = useRef<{ [key: string]: View | null }>({});
+
+  // Use ref for positions to avoid stale closure issues
+  const sectionPositionsRef = useRef<SectionPositions>({
+    hero: 0,
+    skills: 0,
+    projects: 0,
+    contact: 0,
+  });
+
+  // Handler to measure section position when it renders
+  const handleSectionLayout = useCallback(
+    (sectionId: string) => (event: LayoutChangeEvent) => {
+      const { y } = event.nativeEvent.layout;
+      sectionPositionsRef.current[sectionId] = y;
+    },
+    []
+  );
 
   const handleNavigate = useCallback(
     (sectionId: string) => {
@@ -16,23 +38,10 @@ export default function HomeScreen() {
         return;
       }
 
-      // Handle smooth scroll for sections on this page
-      if (Platform.OS === "web") {
-        const element = document.getElementById(sectionId);
-        if (element) {
-          element.scrollIntoView({ behavior: "smooth" });
-        }
-      } else {
-        const sectionRef = sectionRefs.current[sectionId];
-        if (sectionRef && scrollViewRef.current) {
-          sectionRef.measureLayout(
-            findNodeHandle(scrollViewRef.current) as number,
-            (x, y) => {
-              scrollViewRef.current?.scrollTo({ y, animated: true });
-            },
-            () => {}
-          );
-        }
+      // Use measured positions from onLayout for scrolling (works on both web and native)
+      const position = sectionPositionsRef.current[sectionId];
+      if (position !== undefined) {
+        scrollViewRef.current?.scrollTo({ y: position, animated: true });
       }
     },
     [router]
@@ -50,7 +59,7 @@ export default function HomeScreen() {
   }, [router]);
 
   return (
-    <View className="flex-1 bg-background">
+    <SafeAreaView className="flex-1 bg-background" edges={["top"]}>
       {/* Fixed Header */}
       <Header onNavigate={handleNavigate} />
 
@@ -61,26 +70,17 @@ export default function HomeScreen() {
         showsVerticalScrollIndicator={false}
       >
         {/* Hero Section */}
-        <View
-          ref={(ref) => (sectionRefs.current["hero"] = ref)}
-          nativeID="hero"
-        >
+        <View nativeID="hero" onLayout={handleSectionLayout("hero")}>
           <Hero onNavigate={handleNavigate} />
         </View>
 
         {/* Skills Section */}
-        <View
-          ref={(ref) => (sectionRefs.current["skills"] = ref)}
-          nativeID="skills"
-        >
+        <View nativeID="skills" onLayout={handleSectionLayout("skills")}>
           <Skills />
         </View>
 
         {/* Projects Section */}
-        <View
-          ref={(ref) => (sectionRefs.current["projects"] = ref)}
-          nativeID="projects"
-        >
+        <View nativeID="projects" onLayout={handleSectionLayout("projects")}>
           <Projects
             onProjectPress={handleProjectPress}
             onViewAllPress={handleViewAllProjects}
@@ -88,16 +88,13 @@ export default function HomeScreen() {
         </View>
 
         {/* Contact Section */}
-        <View
-          ref={(ref) => (sectionRefs.current["contact"] = ref)}
-          nativeID="contact"
-        >
+        <View nativeID="contact" onLayout={handleSectionLayout("contact")}>
           <Contact />
         </View>
 
         {/* Footer */}
         <Footer onNavigate={handleNavigate} />
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 }

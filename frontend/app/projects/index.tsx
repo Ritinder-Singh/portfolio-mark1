@@ -8,6 +8,7 @@ import {
   Platform,
   Linking,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { useResponsive } from "@/hooks";
 import { PROJECTS, SITE_CONFIG } from "@/constants";
@@ -56,7 +57,7 @@ export default function AllProjectsScreen() {
   };
 
   return (
-    <View className="flex-1 bg-background">
+    <SafeAreaView className="flex-1 bg-background" edges={["top"]}>
       {/* Header */}
       <View className="bg-background border-b border-background-tertiary/30">
         <View className="w-full max-w-7xl mx-auto px-4 md:px-6 lg:px-8">
@@ -256,6 +257,6 @@ export default function AllProjectsScreen() {
           )}
         </View>
       </ScrollView>
-    </View>
+    </SafeAreaView>
   );
 }

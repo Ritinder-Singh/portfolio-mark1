@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Dimensions, Platform } from "react-native";
+import { Dimensions, Platform, PixelRatio } from "react-native";
 
 export type Breakpoint = "mobile" | "tablet" | "desktop";
 
@@ -12,6 +12,7 @@ interface ResponsiveValues {
   height: number;
 }
 
+// Use density-independent pixels for native
 const BREAKPOINTS = {
   mobile: 0,
   tablet: 768,
@@ -34,10 +35,25 @@ export function useResponsive(): ResponsiveValues {
 
   const { width, height } = dimensions;
 
+  // For native platforms, use the smaller dimension to determine if it's a phone
+  // This accounts for both portrait and landscape orientations
   const getBreakpoint = (): Breakpoint => {
-    if (width >= BREAKPOINTS.desktop) return "desktop";
-    if (width >= BREAKPOINTS.tablet) return "tablet";
-    return "mobile";
+    if (Platform.OS === "web") {
+      // For web, use standard CSS-like breakpoints
+      if (width >= BREAKPOINTS.desktop) return "desktop";
+      if (width >= BREAKPOINTS.tablet) return "tablet";
+      return "mobile";
+    } else {
+      // For native (Android/iOS), use density-independent width
+      // Most phones are under 600dp wide, tablets are 600dp+
+      const dpWidth = width / PixelRatio.get();
+      const smallerDimension = Math.min(width, height);
+
+      // If smaller dimension is less than 600, it's likely a phone
+      if (smallerDimension < 600) return "mobile";
+      if (smallerDimension < 900) return "tablet";
+      return "desktop";
+    }
   };
 
   const breakpoint = getBreakpoint();

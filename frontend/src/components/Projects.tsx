@@ -33,7 +33,7 @@ export function Projects({ onProjectPress, onViewAllPress }: ProjectsProps) {
   };
 
   return (
-    <View id="projects" className="bg-background-secondary py-16 md:py-24">
+    <View className="bg-background-secondary py-16 md:py-24">
       <View className="w-full max-w-7xl mx-auto px-4 md:px-6 lg:px-8">
         {/* Section Header */}
         <View className="mb-10 md:mb-12 flex flex-row justify-between items-start">
