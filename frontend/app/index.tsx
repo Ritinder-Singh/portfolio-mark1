@@ -1,8 +1,9 @@
-import { useRef, useCallback } from "react";
-import { ScrollView, View, LayoutChangeEvent } from "react-native";
+import { useRef, useCallback, useState } from "react";
+import { ScrollView, View, LayoutChangeEvent, RefreshControl } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { Header, Hero, Skills, Projects, Contact, Footer } from "@/components";
+import { useProjects, useSkills, useAppFocus } from "@/hooks";
 
 // Type for storing measured section positions
 type SectionPositions = {
@@ -12,6 +13,34 @@ type SectionPositions = {
 export default function HomeScreen() {
   const router = useRouter();
   const scrollViewRef = useRef<ScrollView>(null);
+  const [refreshing, setRefreshing] = useState(false);
+
+  // Data fetching hooks
+  const {
+    projects,
+    isLoading: projectsLoading,
+    refetch: refetchProjects,
+  } = useProjects();
+  const {
+    categories,
+    isLoading: skillsLoading,
+    refetch: refetchSkills,
+  } = useSkills();
+
+  // Refresh all data
+  const refreshData = useCallback(async () => {
+    await Promise.all([refetchProjects(), refetchSkills()]);
+  }, [refetchProjects, refetchSkills]);
+
+  // Pull-to-refresh handler
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await refreshData();
+    setRefreshing(false);
+  }, [refreshData]);
+
+  // Refetch data when app comes to foreground
+  useAppFocus(refreshData);
 
   // Use ref for positions to avoid stale closure issues
   const sectionPositionsRef = useRef<SectionPositions>({
@@ -68,6 +97,14 @@ export default function HomeScreen() {
         ref={scrollViewRef}
         className="flex-1"
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor="#3b82f6"
+            colors={["#3b82f6"]}
+          />
+        }
       >
         {/* Hero Section */}
         <View nativeID="hero" onLayout={handleSectionLayout("hero")}>
@@ -76,7 +113,10 @@ export default function HomeScreen() {
 
         {/* Skills Section */}
         <View nativeID="skills" onLayout={handleSectionLayout("skills")}>
-          <Skills />
+          <Skills
+            externalCategories={categories}
+            externalIsLoading={skillsLoading}
+          />
         </View>
 
         {/* Projects Section */}
@@ -84,6 +124,8 @@ export default function HomeScreen() {
           <Projects
             onProjectPress={handleProjectPress}
             onViewAllPress={handleViewAllProjects}
+            externalProjects={projects}
+            externalIsLoading={projectsLoading}
           />
         </View>
 

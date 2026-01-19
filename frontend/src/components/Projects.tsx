@@ -1,15 +1,29 @@
 import React from "react";
 import { View, Text, Pressable, Image, Platform, Linking, ActivityIndicator } from "react-native";
 import { useResponsive, useProjects } from "@/hooks";
+import type { Project } from "@/types";
 
 interface ProjectsProps {
   onProjectPress?: (projectId: string) => void;
   onViewAllPress?: () => void;
+  /** Optional: pass projects data from parent (for pull-to-refresh support) */
+  externalProjects?: Project[];
+  /** Optional: loading state from parent */
+  externalIsLoading?: boolean;
 }
 
-export function Projects({ onProjectPress, onViewAllPress }: ProjectsProps) {
+export function Projects({
+  onProjectPress,
+  onViewAllPress,
+  externalProjects,
+  externalIsLoading,
+}: ProjectsProps) {
   const { isMobile, isTablet, isDesktop } = useResponsive();
-  const { projects, isLoading } = useProjects();
+  const internalData = useProjects();
+
+  // Use external data if provided, otherwise use internal hook
+  const projects = externalProjects ?? internalData.projects;
+  const isLoading = externalIsLoading ?? internalData.isLoading;
 
   const getGridCols = () => {
     if (isDesktop) return "flex-row flex-wrap";

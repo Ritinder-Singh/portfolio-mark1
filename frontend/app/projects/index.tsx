@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useCallback } from "react";
 import {
   View,
   Text,
@@ -8,17 +8,29 @@ import {
   Platform,
   Linking,
   ActivityIndicator,
+  RefreshControl,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
-import { useResponsive, useProjects } from "@/hooks";
+import { useResponsive, useProjects, useAppFocus } from "@/hooks";
 import { SITE_CONFIG } from "@/constants";
 
 export default function AllProjectsScreen() {
   const router = useRouter();
   const { isMobile, isTablet, isDesktop } = useResponsive();
-  const { projects, isLoading } = useProjects();
+  const { projects, isLoading, refetch } = useProjects();
   const [selectedFilter, setSelectedFilter] = useState<string | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+
+  // Pull-to-refresh handler
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    await refetch();
+    setRefreshing(false);
+  }, [refetch]);
+
+  // Refetch data when app comes to foreground
+  useAppFocus(refetch);
 
   // Extract unique technologies from all projects
   const allTechnologies = useMemo(() => {
@@ -85,7 +97,18 @@ export default function AllProjectsScreen() {
       </View>
 
       {/* Content */}
-      <ScrollView className="flex-1" showsVerticalScrollIndicator={false}>
+      <ScrollView
+        className="flex-1"
+        showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor="#3b82f6"
+            colors={["#3b82f6"]}
+          />
+        }
+      >
         <View className="w-full max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-8 md:py-12">
           {/* Page Header */}
           <View className="mb-8 md:mb-10">

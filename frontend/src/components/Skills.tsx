@@ -1,6 +1,7 @@
 import React from "react";
 import { View, Text, ActivityIndicator } from "react-native";
 import { useResponsive, useSkills } from "@/hooks";
+import type { SkillCategory } from "@/types";
 
 // Icon components for skill categories
 function CodeIcon() {
@@ -47,9 +48,20 @@ function getCategoryIcon(iconName: string) {
   }
 }
 
-export function Skills() {
+interface SkillsProps {
+  /** Optional: pass categories data from parent (for pull-to-refresh support) */
+  externalCategories?: SkillCategory[];
+  /** Optional: loading state from parent */
+  externalIsLoading?: boolean;
+}
+
+export function Skills({ externalCategories, externalIsLoading }: SkillsProps = {}) {
   const { isMobile, isTablet, isDesktop } = useResponsive();
-  const { categories, isLoading } = useSkills();
+  const internalData = useSkills();
+
+  // Use external data if provided, otherwise use internal hook
+  const categories = externalCategories ?? internalData.categories;
+  const isLoading = externalIsLoading ?? internalData.isLoading;
 
   const getGridCols = () => {
     if (isDesktop) return "flex-row flex-wrap";
