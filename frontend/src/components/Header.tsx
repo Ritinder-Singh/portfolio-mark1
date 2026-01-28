@@ -127,7 +127,7 @@ export function Header({ onNavigate }: HeaderProps) {
                   className="py-4 active:opacity-70"
                 >
                   <Text className="text-primary text-lg font-medium">
-                    Download CV
+                    Download Resume
                   </Text>
                 </Pressable>
               </View>
