@@ -4,11 +4,10 @@ import { NavItem, SkillCategory, Project, ContactInfo } from "@/types";
 export const SITE_CONFIG = {
   // TODO: Change this to your preferred logo text
   logo: "<devPortfolio />",
-  name: "John Doe",
+  name: "Ritinder Singh",
   title: "Full Stack Developer",
-  email: "johndoe@email.com",
-  // TODO: Update CV download link
-  cvUrl: "/assets/cv.pdf",
+  email: "for.ritindersingh@gmail.com",
+  cvUrl: "https://backend.ritinder-singh.com/static/cv.pdf",
 };
 
 export const NAV_ITEMS: NavItem[] = [
@@ -106,28 +105,26 @@ export const CONTACT_INFO: ContactInfo[] = [
   {
     type: "linkedin",
     label: "LinkedIn",
-    value: "linkedin.com/in/johndoe",
-    url: "https://linkedin.com/in/johndoe",
+    value: "linkedin.com/in/ritindersingh",
+    url: "https://www.linkedin.com/in/ritindersingh/",
   },
   {
     type: "github",
     label: "GitHub",
-    value: "github.com/johndoe",
-    url: "https://github.com/johndoe",
+    value: "github.com/Ritinder-Singh",
+    url: "https://github.com/Ritinder-Singh",
   },
   {
     type: "email",
     label: "Email",
-    value: "johndoe@email.com",
-    url: "mailto:johndoe@email.com",
+    value: "for.ritindersingh@gmail.com",
+    url: "mailto:for.ritindersingh@gmail.com",
   },
 ];
 
 // Hero section animated words
 // TODO: Customize the rotating words in the hero section
 export const HERO_WORDS = [
-  "html",
-  "css",
   "javascript",
   "react",
   "node.js",
@@ -139,7 +136,7 @@ export const HERO_CONTENT = {
   headline: "Building the future,",
   headlineHighlight: "one line of code at a time",
   description:
-    "I'm a passionate frontend developer focused on clean code, beautiful UI, and creating meaningful digital experiences. Welcome to my digital workspace.",
+    "I'm a passionate developer focused on clean code, beautiful UI, and creating meaningful digital experiences. Welcome to my digital workspace.",
   ctaPrimary: "View Projects",
   ctaSecondary: "Contact Me",
 };
