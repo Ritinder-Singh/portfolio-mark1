@@ -24,4 +24,5 @@ export const API_ENDPOINTS = {
   projects: `${API_URL}/projects`,
   skills: `${API_URL}/skills`,
   skillCategories: `${API_URL}/skills/categories`,
+  contact: `${API_URL}/contact`,
 } as const;

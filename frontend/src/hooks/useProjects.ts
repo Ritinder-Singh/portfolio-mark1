@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
 import { API_ENDPOINTS } from "@/config";
-import { PROJECTS } from "@/constants";
 import type { Project } from "@/types";
 
 // API response types (matching backend schema)
@@ -53,7 +52,7 @@ interface UseProjectsResult {
 }
 
 export function useProjects(): UseProjectsResult {
-  const [projects, setProjects] = useState<Project[]>(PROJECTS);
+  const [projects, setProjects] = useState<Project[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -80,9 +79,8 @@ export function useProjects(): UseProjectsResult {
 
       setProjects(transformedProjects);
     } catch (err) {
-      console.warn("Failed to fetch projects from API, using fallback data:", err);
+      console.warn("Failed to fetch projects from API:", err);
       setError(err instanceof Error ? err.message : "Failed to fetch projects");
-      // Keep using fallback data (already set as initial state)
     } finally {
       setIsLoading(false);
     }
@@ -115,29 +113,14 @@ export function useProject(id: string): UseProjectResult {
         const response = await fetch(`${API_ENDPOINTS.projects}/${id}`);
 
         if (!response.ok) {
-          if (response.status === 404) {
-            // Try fallback data
-            const fallbackProject = PROJECTS.find((p) => p.id === id);
-            if (fallbackProject) {
-              setProject(fallbackProject);
-              return;
-            }
-            throw new Error("Project not found");
-          }
-          throw new Error(`HTTP error! status: ${response.status}`);
+          throw new Error(response.status === 404 ? "Project not found" : `HTTP error! status: ${response.status}`);
         }
 
         const data: ApiProject = await response.json();
         setProject(transformProject(data));
       } catch (err) {
-        console.warn("Failed to fetch project from API, using fallback data:", err);
-        // Try fallback data
-        const fallbackProject = PROJECTS.find((p) => p.id === id);
-        if (fallbackProject) {
-          setProject(fallbackProject);
-        } else {
-          setError(err instanceof Error ? err.message : "Failed to fetch project");
-        }
+        console.warn("Failed to fetch project from API:", err);
+        setError(err instanceof Error ? err.message : "Failed to fetch project");
       } finally {
         setIsLoading(false);
       }

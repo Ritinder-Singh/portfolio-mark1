@@ -9,7 +9,8 @@ import {
   Alert,
 } from "react-native";
 import { useResponsive } from "@/hooks";
-import { CONTACT_INFO, SITE_CONFIG } from "@/constants";
+import { CONTACT_INFO } from "@/constants";
+import { API_ENDPOINTS } from "@/config";
 
 // Simple icon components
 function LinkedInIcon() {
@@ -68,8 +69,6 @@ export function Contact() {
   };
 
   const handleSubmit = async () => {
-    // TODO: Implement form submission with backend
-    // For now, just show an alert
     if (!formData.firstName || !formData.email || !formData.message) {
       if (Platform.OS === "web") {
         alert("Please fill in all required fields");
@@ -81,16 +80,39 @@ export function Contact() {
 
     setIsSubmitting(true);
 
-    // Simulate API call
-    setTimeout(() => {
-      setIsSubmitting(false);
+    try {
+      const response = await fetch(API_ENDPOINTS.contact, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          first_name: formData.firstName,
+          last_name: formData.lastName || null,
+          email: formData.email,
+          message: formData.message,
+        }),
+      });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => null);
+        throw new Error(data?.detail || "Failed to send message");
+      }
+
       if (Platform.OS === "web") {
-        alert("Message sent successfully! (Demo - backend not implemented)");
+        alert("Message sent successfully!");
       } else {
-        Alert.alert("Success", "Message sent successfully! (Demo - backend not implemented)");
+        Alert.alert("Success", "Message sent successfully!");
       }
       setFormData({ firstName: "", lastName: "", email: "", message: "" });
-    }, 1000);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Something went wrong";
+      if (Platform.OS === "web") {
+        alert(msg);
+      } else {
+        Alert.alert("Error", msg);
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (

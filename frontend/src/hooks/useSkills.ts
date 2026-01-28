@@ -1,6 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
 import { API_ENDPOINTS } from "@/config";
-import { SKILL_CATEGORIES } from "@/constants";
 import type { SkillCategory } from "@/types";
 
 // API response types (matching backend schema)
@@ -47,7 +46,7 @@ interface UseSkillsResult {
 }
 
 export function useSkills(): UseSkillsResult {
-  const [categories, setCategories] = useState<SkillCategory[]>(SKILL_CATEGORIES);
+  const [categories, setCategories] = useState<SkillCategory[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -72,9 +71,8 @@ export function useSkills(): UseSkillsResult {
 
       setCategories(transformedCategories);
     } catch (err) {
-      console.warn("Failed to fetch skills from API, using fallback data:", err);
+      console.warn("Failed to fetch skills from API:", err);
       setError(err instanceof Error ? err.message : "Failed to fetch skills");
-      // Keep using fallback data (already set as initial state)
     } finally {
       setIsLoading(false);
     }
