@@ -59,7 +59,7 @@ export function Header({ onNavigate }: HeaderProps) {
                   className="px-3 py-2 md:px-4 md:py-2 border border-primary rounded-lg active:opacity-70"
                 >
                   <Text className="text-primary text-sm font-medium">
-                    Download CV
+                    Download Resume
                   </Text>
                 </Pressable>
               )}
