@@ -1,0 +1,165 @@
+# Backend + Admin Dockerfile for Northflank
+# Runs FastAPI API server and Next.js admin panel in a single container
+# Build context: repository root
+
+# ---------------------
+# Stage 1: Build admin panel
+# ---------------------
+FROM node:20-alpine AS admin-builder
+RUN apk add --no-cache libc6-compat
+WORKDIR /app
+
+COPY admin/package.json admin/package-lock.json* ./
+RUN npm ci
+
+COPY admin/ .
+
+ARG NEXT_PUBLIC_API_URL=/api/v1
+ARG NEXT_PUBLIC_BASE_PATH=/admin
+ENV NEXT_PUBLIC_API_URL=$NEXT_PUBLIC_API_URL
+ENV NEXT_PUBLIC_BASE_PATH=$NEXT_PUBLIC_BASE_PATH
+
+RUN npm run build
+
+# ---------------------
+# Stage 2: Production image
+# ---------------------
+FROM python:3.12-slim
+
+# Install system dependencies: gcc/libpq for psycopg, nginx, supervisor
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    gcc \
+    libpq-dev \
+    nginx \
+    supervisor \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy Node.js runtime from official image (same Debian base = compatible libs)
+COPY --from=node:20-bookworm-slim /usr/local/bin/node /usr/local/bin/node
+
+# ---------------------
+# Backend setup
+# ---------------------
+WORKDIR /app/backend
+COPY backend/requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+COPY backend/ .
+RUN chmod +x entrypoint.sh
+
+# ---------------------
+# Admin setup
+# ---------------------
+WORKDIR /app/admin
+COPY --from=admin-builder /app/public ./public
+COPY --from=admin-builder /app/.next/standalone ./
+COPY --from=admin-builder /app/.next/static ./.next/static
+
+# ---------------------
+# Nginx config
+# ---------------------
+RUN rm -f /etc/nginx/sites-enabled/default && \
+    cat > /etc/nginx/conf.d/portfolio.conf << 'NGINXCONF'
+server {
+    listen 80;
+    server_name _;
+
+    # Gzip compression
+    gzip on;
+    gzip_vary on;
+    gzip_min_length 1024;
+    gzip_types text/plain text/css text/xml text/javascript application/javascript application/json application/xml;
+
+    # API routes -> FastAPI
+    location /api/ {
+        proxy_pass http://127.0.0.1:8000;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # Health check -> FastAPI
+    location /health {
+        proxy_pass http://127.0.0.1:8000/health;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+    }
+
+    # Admin panel -> Next.js
+    location /admin {
+        proxy_pass http://127.0.0.1:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+    }
+
+    # Admin static assets -> Next.js
+    location /_next {
+        proxy_pass http://127.0.0.1:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_cache_valid 200 1d;
+    }
+
+    # Root -> FastAPI (for docs/openapi)
+    location / {
+        proxy_pass http://127.0.0.1:8000;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+}
+NGINXCONF
+
+# ---------------------
+# Supervisor config
+# ---------------------
+RUN cat > /etc/supervisor/conf.d/portfolio.conf << 'SUPCONF'
+[supervisord]
+nodaemon=true
+logfile=/var/log/supervisor/supervisord.log
+pidfile=/var/run/supervisord.pid
+
+[program:nginx]
+command=nginx -g "daemon off;"
+autostart=true
+autorestart=true
+stdout_logfile=/dev/stdout
+stdout_logfile_maxbytes=0
+stderr_logfile=/dev/stderr
+stderr_logfile_maxbytes=0
+
+[program:backend]
+command=uvicorn app.main:app --host 0.0.0.0 --port 8000
+directory=/app/backend
+autostart=true
+autorestart=true
+stdout_logfile=/dev/stdout
+stdout_logfile_maxbytes=0
+stderr_logfile=/dev/stderr
+stderr_logfile_maxbytes=0
+
+[program:admin]
+command=node server.js
+directory=/app/admin
+environment=NODE_ENV=production,PORT=3000,HOSTNAME=0.0.0.0
+autostart=true
+autorestart=true
+stdout_logfile=/dev/stdout
+stdout_logfile_maxbytes=0
+stderr_logfile=/dev/stderr
+stderr_logfile_maxbytes=0
+SUPCONF
+
+WORKDIR /app
+
+EXPOSE 80
+
+CMD ["supervisord", "-n", "-c", "/etc/supervisor/supervisord.conf"]

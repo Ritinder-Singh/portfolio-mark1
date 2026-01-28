@@ -1,10 +1,12 @@
+import logging
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Query, Request, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, Request, status
 from sqlalchemy.orm import Session
 
 from app.core.database import get_db
 from app.core.deps import CurrentAdmin
+from app.core.email import send_contact_notification
 from app.models.contact import ContactSubmission
 from app.schemas.contact import (
     ContactSubmissionCreate,
@@ -13,14 +15,17 @@ from app.schemas.contact import (
     ContactSubmissionPublicResponse,
 )
 
+logger = logging.getLogger(__name__)
+
 router = APIRouter(prefix="/contact", tags=["Contact"])
 
 
 # Public endpoint
 @router.post("", response_model=ContactSubmissionPublicResponse, status_code=status.HTTP_201_CREATED)
-def submit_contact_form(
+async def submit_contact_form(
     submission_in: ContactSubmissionCreate,
     request: Request,
+    background_tasks: BackgroundTasks,
     db: Annotated[Session, Depends(get_db)],
 ):
     """Submit a contact form (public endpoint)."""
@@ -40,7 +45,15 @@ def submit_contact_form(
     db.add(submission)
     db.commit()
 
-    # TODO: Send email notification if configured
+    # Send email notification in background
+    background_tasks.add_task(
+        send_contact_notification,
+        first_name=submission_in.first_name,
+        last_name=submission_in.last_name,
+        email=submission_in.email,
+        message=submission_in.message,
+    )
+    logger.info(f"Contact form submitted by {submission_in.email}, notification queued")
 
     return ContactSubmissionPublicResponse(
         success=True,

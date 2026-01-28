@@ -25,5 +25,5 @@ USER appuser
 
 EXPOSE 8000
 
-# Run entrypoint (migrations + server)
+# Run entrypoint (server)
 CMD ["./entrypoint.sh"]

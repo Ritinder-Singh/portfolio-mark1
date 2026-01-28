@@ -1,0 +1,67 @@
+version: '3.8'
+
+# Portfolio staging environment
+# Ports chosen to not conflict with existing CI/CD services:
+# - Backend: 5003 (existing uses 5001-5002)
+# - Frontend: 8084 (existing uses 8081-8083)
+# - Admin: 3002 (existing uses 3000)
+# - PostgreSQL: 5434 (existing uses 5432-5433)
+
+services:
+  db:
+    image: postgres:16-alpine
+    container_name: portfolio-db
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-portfolio}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-portfolio-staging}
+      POSTGRES_DB: ${POSTGRES_DB:-portfolio}
+    volumes:
+      - portfolio_postgres:/var/lib/postgresql/data
+    ports:
+      - "5434:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-portfolio}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  backend:
+    image: registry.lan:5000/portfolio-backend:latest
+    container_name: portfolio-backend
+    environment:
+      DATABASE_URL: postgresql://${POSTGRES_USER:-portfolio}:${POSTGRES_PASSWORD:-portfolio-staging}@db:5432/${POSTGRES_DB:-portfolio}
+      SECRET_KEY: ${SECRET_KEY:-staging-secret-change-me}
+      CORS_ORIGINS: '["http://192.168.1.9:8084","http://192.168.1.9:3002","http://localhost:8084","http://localhost:3002"]'
+      SMTP_HOST: ${SMTP_HOST:-}
+      SMTP_PORT: ${SMTP_PORT:-587}
+      SMTP_USER: ${SMTP_USER:-}
+      SMTP_PASS: ${SMTP_PASS:-}
+      NOTIFICATION_EMAIL: ${NOTIFICATION_EMAIL:-}
+    ports:
+      - "5003:8000"
+    depends_on:
+      db:
+        condition: service_healthy
+    restart: unless-stopped
+
+  admin:
+    image: registry.lan:5000/portfolio-admin:latest
+    container_name: portfolio-admin
+    ports:
+      - "3002:3000"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+  frontend:
+    image: registry.lan:5000/portfolio-frontend:latest
+    container_name: portfolio-frontend
+    ports:
+      - "8084:80"
+    depends_on:
+      - backend
+    restart: unless-stopped
+
+volumes:
+  portfolio_postgres:

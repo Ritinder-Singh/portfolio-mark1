@@ -364,6 +364,56 @@ Edit `frontend/app.json` before building:
 
 ---
 
+## CI/CD with Jenkins (Raspberry Pi)
+
+The project includes a Jenkins pipeline that integrates with your existing CI/CD infrastructure.
+
+### Features
+- Builds and pushes images to `registry.lan:5000`
+- Triggers EAS cloud builds for APK (faster than local)
+- Deploys staging using Podman
+- Email notifications via existing Jenkins config
+
+### Staging URLs (192.168.1.9)
+| Service | Port | URL |
+|---------|------|-----|
+| Frontend | 8084 | http://192.168.1.9:8084 |
+| Admin | 3002 | http://192.168.1.9:3002 |
+| Backend API | 5003 | http://192.168.1.9:5003/api/v1 |
+| PostgreSQL | 5434 | localhost:5434 |
+
+### Jenkins Setup
+1. Create new pipeline job pointing to this repo
+2. Add `expo-token` credential (from expo.dev)
+3. Pipeline uses `Jenkinsfile` automatically
+
+---
+
+## Email Notifications
+
+Contact form submissions automatically send email notifications.
+
+### Configuration (Zoho Mail)
+Add these environment variables to your backend:
+
+```env
+# Use smtp.zoho.in for India, smtp.zoho.eu for EU
+SMTP_HOST=smtp.zoho.com
+SMTP_PORT=587
+SMTP_USER=your-email@zohomail.com
+SMTP_PASS=your-zoho-app-password
+NOTIFICATION_EMAIL=your-email@zohomail.com
+```
+
+### Zoho App Password Setup
+1. Log in to Zoho Mail → Settings → Security
+2. Enable Two-Factor Authentication (if not already)
+3. Go to **App Passwords** → Generate New Password
+4. Name it "Portfolio" and copy the password
+5. Use this as `SMTP_PASS`
+
+---
+
 ## Troubleshooting
 
 ### Backend won't start

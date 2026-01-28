@@ -28,7 +28,14 @@ class Settings(BaseSettings):
     SMTP_PORT: int = 587
     SMTP_USER: str | None = None
     SMTP_PASSWORD: str | None = None
+    SMTP_PASS: str | None = None  # Alias for SMTP_PASSWORD
     EMAIL_FROM: str | None = None
+    NOTIFICATION_EMAIL: str | None = None  # Email to receive contact form notifications
+
+    @property
+    def smtp_password(self) -> str | None:
+        """Get SMTP password from either SMTP_PASSWORD or SMTP_PASS."""
+        return self.SMTP_PASSWORD or self.SMTP_PASS
 
     class Config:
         env_file = ".env"
